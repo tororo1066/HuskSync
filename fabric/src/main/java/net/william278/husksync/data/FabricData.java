@@ -57,6 +57,7 @@ import net.william278.husksync.config.Settings.SynchronizationSettings.Attribute
 //#if MC>=12104
 import net.william278.husksync.mixins.HungerManagerMixin;
 //#endif
+import net.william278.husksync.mixins.StatusEffectInstanceMixin;
 import net.william278.husksync.user.FabricUser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -271,21 +272,7 @@ public abstract class FabricData implements Data {
         @NotNull
         public static FabricData.PotionEffects adapt(@NotNull Collection<Effect> effects) {
             return from(effects.stream()
-                    .map(effect -> {
-                        final StatusEffect type = matchEffectType(effect.type());
-                        return type != null ? new StatusEffectInstance(
-                                //#if MC==12001
-                                //$$ type,
-                                //#else
-                                RegistryEntry.of(type),
-                                //#endif
-                                effect.duration(),
-                                effect.amplifier(),
-                                effect.isAmbient(),
-                                effect.showParticles(),
-                                effect.hasIcon()
-                        ) : null;
-                    })
+                    .map(FabricData.PotionEffects::adapt)
                     .filter(Objects::nonNull)
                     .toList()
             );
@@ -318,25 +305,60 @@ public abstract class FabricData implements Data {
         @Unmodifiable
         public List<Effect> getActiveEffects() {
             return effects.stream()
-                    .map(potionEffect -> {
-                        //#if MC==12001
-                        //$$ final String key = getEffectId(potionEffect.getEffectType());
-                        //#else
-                        final String key = getEffectId(potionEffect.getEffectType().value());
-                        //#endif
-                        return key != null ? new Effect(
-                                key,
-                                potionEffect.getAmplifier(),
-                                potionEffect.getDuration(),
-                                potionEffect.isAmbient(),
-                                potionEffect.shouldShowParticles(),
-                                potionEffect.shouldShowIcon()
-                        ) : null;
-                    })
+                    .map(FabricData.PotionEffects::adapt)
                     .filter(Objects::nonNull)
                     .toList();
         }
 
+        @Nullable
+        private static StatusEffectInstance adapt(@NotNull Effect effect) {
+            final StatusEffect type = matchEffectType(effect.type());
+            if (type == null) {
+                return null;
+            }
+            return new StatusEffectInstance(
+                    //#if MC==12001
+                    //$$ type,
+                    //#else
+                    RegistryEntry.of(type),
+                    //#endif
+                    effect.duration(),
+                    effect.amplifier(),
+                    effect.isAmbient(),
+                    effect.showParticles(),
+                    effect.hasIcon(),
+                    effect.hiddenEffect() != null ? adapt(effect.hiddenEffect()) : null
+                    //#if MC==12001
+                    //$$ , type.getFactorCalculationDataSupplier()
+                    //#endif
+            );
+        }
+
+        @Nullable
+        private static Effect adapt(@NotNull StatusEffectInstance effect) {
+            final String key = getEffectId(
+                    //#if MC==12001
+                    //$$ effect.getEffectType()
+                    //#else
+                    effect.getEffectType().value()
+                    //#endif
+            );
+            if (key == null) {
+                return null;
+            }
+
+            StatusEffectInstanceMixin mixin = (StatusEffectInstanceMixin) effect;
+
+            return new Effect(
+                    key,
+                    effect.getAmplifier(),
+                    effect.getDuration(),
+                    effect.isAmbient(),
+                    effect.shouldShowParticles(),
+                    effect.shouldShowIcon(),
+                    mixin.getHiddenEffect() != null ? adapt(mixin.getHiddenEffect()) : null
+            );
+        }
     }
 
     @Getter

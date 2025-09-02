@@ -9,7 +9,8 @@
     "PlayerEntityMixin",
     "ServerPlayerEntityMixin",
     "ServerPlayNetworkHandlerMixin",
-    "ServerWorldMixin"
+    "ServerWorldMixin",
+    "StatusEffectInstanceMixin"
   ],
   "client": [],
   "injectors": {

@@ -143,7 +143,8 @@ public interface Data {
                       @SerializedName("duration") int duration,
                       @SerializedName("is_ambient") boolean isAmbient,
                       @SerializedName("show_particles") boolean showParticles,
-                      @SerializedName("has_icon") boolean hasIcon) {
+                      @SerializedName("has_icon") boolean hasIcon,
+                      @SerializedName("hidden_effect") @Nullable Effect hiddenEffect) {
 
         }
 

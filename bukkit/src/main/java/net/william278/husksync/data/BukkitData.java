@@ -245,17 +245,7 @@ public abstract class BukkitData implements Data {
         @NotNull
         public static BukkitData.PotionEffects adapt(@NotNull Collection<Effect> effects) {
             return from(effects.stream()
-                    .map(effect -> {
-                        final PotionEffectType type = matchEffectType(effect.type());
-                        return type != null ? new PotionEffect(
-                                type,
-                                effect.duration(),
-                                effect.amplifier(),
-                                effect.isAmbient(),
-                                effect.showParticles(),
-                                effect.hasIcon()
-                        ) : null;
-                    })
+                    .map(BukkitData.PotionEffects::adapt)
                     .filter(Objects::nonNull)
                     .toList());
         }
@@ -282,15 +272,45 @@ public abstract class BukkitData implements Data {
         @Unmodifiable
         public List<Effect> getActiveEffects() {
             return effects.stream()
-                    .map(potionEffect -> new Effect(
-                            potionEffect.getType().getKey().toString(),
-                            potionEffect.getAmplifier(),
-                            potionEffect.getDuration(),
-                            potionEffect.isAmbient(),
-                            potionEffect.hasParticles(),
-                            potionEffect.hasIcon()
-                    ))
+                    .map(BukkitData.PotionEffects::adapt)
                     .toList();
+        }
+
+        @NotNull
+        private static Effect adapt(@NotNull PotionEffect potionEffect) {
+
+            return new Effect(
+                    potionEffect.getType().getKey().toString(),
+                    potionEffect.getAmplifier(),
+                    potionEffect.getDuration(),
+                    potionEffect.isAmbient(),
+                    potionEffect.hasParticles(),
+                    potionEffect.hasIcon()
+                    //#if MC==12001
+                    //$$ , null
+                    //#else
+                    , adapt(potionEffect.getHiddenPotionEffect())
+                    //#endif
+            );
+        }
+
+        @Nullable
+        private static PotionEffect adapt(@NotNull Effect effect) {
+            final PotionEffectType type = matchEffectType(effect.type());
+            if (type == null) {
+                return null;
+            }
+            return new PotionEffect(
+                    type,
+                    effect.duration(),
+                    effect.amplifier(),
+                    effect.isAmbient(),
+                    effect.showParticles(),
+                    effect.hasIcon()
+                    //#if MC!=12001
+                    , adapt(effect.hiddenEffect())
+                    //#endif
+            );
         }
 
     }
