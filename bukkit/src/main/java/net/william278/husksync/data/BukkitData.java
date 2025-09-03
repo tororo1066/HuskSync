@@ -289,7 +289,7 @@ public abstract class BukkitData implements Data {
                     //#if MC==12001
                     //$$ , null
                     //#else
-                    , adapt(potionEffect.getHiddenPotionEffect())
+                    , potionEffect.getHiddenPotionEffect() != null ? adapt(potionEffect.getHiddenPotionEffect()) : null
                     //#endif
             );
         }
@@ -308,7 +308,7 @@ public abstract class BukkitData implements Data {
                     effect.showParticles(),
                     effect.hasIcon()
                     //#if MC!=12001
-                    , adapt(effect.hiddenEffect())
+                    , effect.hiddenEffect() != null ? adapt(effect.hiddenEffect()) : null
                     //#endif
             );
         }
